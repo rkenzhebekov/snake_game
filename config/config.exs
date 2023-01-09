@@ -10,7 +10,7 @@ config :elixir_snake, :viewport,
   name: :main_viewport,
   size: {800, 600},
   theme: :dark,
-  default_scene: ElixirSnake.Scene.Home,
+  default_scene: ElixirSnake.Scene.Game,
   drivers: [
     [
       module: Scenic.Driver.Local,
