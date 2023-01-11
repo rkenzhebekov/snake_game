@@ -1,7 +1,7 @@
 defmodule ElixirSnake.Scene.Game do
   use Scenic.Scene
   alias Scenic.Graph
-  # alias Scenic.ViewPort
+  alias Scenic.ViewPort
   import Scenic.Primitives, only: [text: 3, rrect: 3]
 
   @graph Graph.build(font: :roboto, font_size: 36)
@@ -12,11 +12,7 @@ defmodule ElixirSnake.Scene.Game do
   @pellet_score 100
 
   @input_classes [:codepoint, :key]
-
-  # @left {-1, 0}
-  # @right {1, 0}
-  # @up {0, -1}
-  # @down {0, 1}
+  @game_over_scene ElixirSnake.Scene.GameOver
 
   def init(scene, _param, _opts) do
     {width, height} = scene.viewport.size
@@ -37,6 +33,7 @@ defmodule ElixirSnake.Scene.Game do
 
     scene =
       assign(scene,
+        viewport: scene.viewport,
         score: 0,
         tile_width: vp_tile_width,
         tile_height: vp_tile_height,
@@ -91,7 +88,6 @@ defmodule ElixirSnake.Scene.Game do
   end
 
   def handle_info(:frame, %Scenic.Scene{assigns: state} = scene) do
-    # IO.inspect(state)
     state = move_snake(state)
 
     graph =
@@ -123,7 +119,11 @@ defmodule ElixirSnake.Scene.Game do
     {rem(pos_x + vec_x + w, w), rem(pos_y + vec_y + h, h)}
   end
 
-  defp maybe_die(%{} = state) do
+  defp maybe_die(%{viewport: vp, objects: %{snake: %{body: snake}}, score: score} = state) do
+    if length(Enum.uniq(snake)) < length(snake) do
+      ViewPort.set_root(vp, @game_over_scene, score)
+    end
+
     state
   end
 
@@ -167,35 +167,30 @@ defmodule ElixirSnake.Scene.Game do
   end
 
   def handle_input({:key, {:key_left, _, _}}, _context, %Scenic.Scene{assigns: state} = scene) do
-    IO.inspect(state)
     state = update_snake_direction(state, {-1, 0})
     scene = assign(scene, Enum.to_list(state))
     {:noreply, scene}
   end
 
   def handle_input({:key, {:key_right, _, _}}, _context, %Scenic.Scene{assigns: state} = scene) do
-    IO.inspect(state)
     state = update_snake_direction(state, {1, 0})
     scene = assign(scene, Enum.to_list(state))
     {:noreply, scene}
   end
 
   def handle_input({:key, {:key_up, _, _}}, _context, %Scenic.Scene{assigns: state} = scene) do
-    IO.inspect(state)
     state = update_snake_direction(state, {0, -1})
     scene = assign(scene, Enum.to_list(state))
     {:noreply, scene}
   end
 
   def handle_input({:key, {:key_down, _, _}}, _context, %Scenic.Scene{assigns: state} = scene) do
-    IO.inspect(state)
     state = update_snake_direction(state, {0, 1})
     scene = assign(scene, Enum.to_list(state))
     {:noreply, scene}
   end
 
-  def handle_input(evt, _ctx, scene) do
-    IO.inspect(evt, label: "Input")
+  def handle_input(_evt, _ctx, scene) do
     {:noreply, scene}
   end
 
